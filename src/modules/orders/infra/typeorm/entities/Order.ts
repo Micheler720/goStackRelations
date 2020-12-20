@@ -30,7 +30,7 @@ class Order {
     cascade: true,
     eager: true,
   })
-  @JoinColumn({ referencedColumnName: 'order_id' })
+  @JoinColumn({ name: 'order' })
   order_products: OrdersProducts[];
 
   @CreateDateColumn()
