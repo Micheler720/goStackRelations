@@ -73,7 +73,17 @@ class CreateOrderService {
       products: productsCreate,
     };
     const order = await this.ordersRepository.create(createOrder);
-    await this.productsRepository.updateQuantity(products);
+
+    const productsUpdateQuantity = verifyProducts.map(findProducts => {
+      const product = products.filter(p => p.id === findProducts.id);
+
+      return {
+        id: findProducts.id,
+        quantity: findProducts.quantity - product[0].quantity,
+      };
+    });
+
+    await this.productsRepository.updateQuantity(productsUpdateQuantity);
     return order;
   }
 }

@@ -3,6 +3,7 @@ import { getRepository, Repository, In } from 'typeorm';
 import IProductsRepository from '@modules/products/repositories/IProductsRepository';
 import ICreateProductDTO from '@modules/products/dtos/ICreateProductDTO';
 import IUpdateProductsQuantityDTO from '@modules/products/dtos/IUpdateProductsQuantityDTO';
+import { readSync } from 'fs';
 import Product from '../entities/Product';
 
 interface IFindProducts {
@@ -44,22 +45,23 @@ class ProductsRepository implements IProductsRepository {
     products: IUpdateProductsQuantityDTO[],
   ): Promise<Product[]> {
     const idsProduct = products.map(product => ({ id: product.id }));
-    const productsUpdate = await this.findAllById(idsProduct);
+    const productsSerialazed = await this.findAllById(idsProduct);
 
-    const productsUpdateQuantity = productsUpdate.map(productUpdate => {
-      const product = products.filter(
-        findProduct => findProduct.id === productUpdate.id,
-      );
+    const productsUpdate: Product[] = productsSerialazed.map(
+      (product): Product => {
+        const quantityProduct = products.filter(
+          findProduct => findProduct.id === product.id,
+        );
+        return {
+          ...product,
+          quantity: quantityProduct[0].quantity,
+        };
+      },
+    );
 
-      return {
-        ...productUpdate,
-        quantity: productUpdate.quantity - product[0].quantity,
-      };
-    });
+    await this.ormRepository.save(productsUpdate);
 
-    await this.ormRepository.save(productsUpdateQuantity);
-
-    return productsUpdateQuantity;
+    return productsUpdate;
   }
 }
 
